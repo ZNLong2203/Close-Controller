@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Finance tooling is read for long stretches under time pressure. The palette
+   stays quiet so that the two colours that carry meaning — the block red and
+   the posted green — are never competing with decoration. */
+:root {
+  --bg: #fbfbfa;
+  --panel: #ffffff;
+  --border: #e4e4e1;
+  --text: #1a1a18;
+  --muted: #6b6b66;
+  --accent: #1f5f4f;
+  --accent-soft: #e8f2ef;
+  --danger: #a32020;
+  --danger-soft: #fdeceb;
+  --warn: #8a6100;
+  --warn-soft: #fdf4e0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16171a;
+    --panel: #1d1e22;
+    --border: #2e3036;
+    --text: #ececea;
+    --muted: #9a9a95;
+    --accent: #6fd0b0;
+    --accent-soft: #17302a;
+    --danger: #ff8a80;
+    --danger-soft: #341c1c;
+    --warn: #e8b33c;
+    --warn-soft: #2f2717;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Money and identifiers line up column-wise or they cannot be scanned. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
