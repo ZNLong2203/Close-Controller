@@ -99,3 +99,113 @@ Support `--baseline` (rules disabled, everything through the LLM) and write both
 runs into `docs/RESULTS.md` as a before/after table. That table is the evidence
 of "measurable improvement" the judging criteria asks for — it is worth more than
 any feature.
+
+---
+
+# Round 2 — remaining work
+
+These three are independent and own disjoint files, so they run as parallel AO
+workers. Read this first:
+
+- **Hooks are installed.** `scripts/hooks/pre-commit` refuses any commit
+  containing a credential; `scripts/hooks/commit-msg` requires Conventional
+  Commits (`feat(scope): …`). A rejected commit is the hook working, not a bug.
+- `npm run seed` builds the fixture, `npm run typecheck` must stay clean,
+  `npm run eval` must still report **0 false auto-posts** when you are done.
+- Money is integer cents everywhere. No floats touch a monetary value.
+
+---
+
+## Worker F — CSV ingestion
+**Owns:** `src/app/import/**`, `src/lib/import/**`, `src/app/api/import/**`
+
+Right now the system only runs against the seeded fixture. A judge asking "can I
+run this on my own statement?" gets no for an answer, and that is the weakest
+point in the whole submission.
+
+Build an import flow:
+
+1. **Upload** — a page at `/import` taking two CSVs: a bank statement and a
+   general ledger export. Drag-and-drop or file picker, both fine.
+2. **Column mapping** — real exports never share a schema. Parse the header row,
+   guess the mapping (date / amount / description / reference / counterparty for
+   bank; date / amount / account / memo / vendor / reference for ledger), and
+   show the guess in editable dropdowns. The guess should handle the obvious
+   synonyms: `Date`, `Transaction Date`, `Posted`, `Value Date`; `Amount`,
+   `Debit`/`Credit` pairs, `Value`; and so on.
+3. **Amount handling** — support both a single signed column and separate
+   debit/credit columns. Strip currency symbols, thousands separators, and
+   parentheses-for-negative. Parse to integer cents; never `parseFloat` into a
+   money field.
+4. **Preview** — first 10 rows as they will be inserted, with a count and the
+   detected date range. Nothing is written until the user confirms.
+5. **Import** — insert into `bank_txn` / `gl_entry`, then send the user to `/`
+   to run a close. Write an `audit_event` recording who imported what and how
+   many rows.
+
+Reject rather than guess: an unparseable date or amount fails the row and is
+reported in a rejected-rows list. Silently coercing bad financial data is worse
+than refusing it.
+
+Ship a couple of realistic sample CSVs in `data/samples/` so the flow can be
+demonstrated without the fixture.
+
+---
+
+## Worker G — Test suite
+**Owns:** `src/**/*.test.ts`, and a `test` script in `package.json`
+
+Use `node:test` and `node:assert/strict` — built into Node 22, no new
+dependency. Add `"test": "tsx --test src/**/*.test.ts"` to package.json.
+
+The credibility problem this solves: the same author wrote the fixture and the
+matcher, so the eval scoring 100% precision proves less than it looks. Unit
+tests written against the *stated behaviour* of each function, not against the
+fixture, are what close that gap.
+
+Cover at minimum:
+
+**`normalize.ts`** — `normalizeCounterparty` strips bank noise and references;
+`extractRefs` finds `INV-1234` / `PO-4001` in free text and returns them
+uppercased and de-duplicated; `similarity` scores a truncated bank name against
+a full vendor name above 0.8 and two unrelated vendors below 0.3; `daysBetween`
+is order-independent.
+
+**`rules.ts`** — build small in-memory `Side` objects and assert each pass in
+isolation: an exact reference pair matches at 0.99; two identical-amount legs
+sharing one reference produce **one** match and leave the second leg in the
+residue; two legs summing to the ledger amount produce a single one-to-many
+match; a cross-currency pair inside the FX band matches, one outside it does
+not; unrelated rows are left alone.
+
+**`guardrails.ts`** — every rule, both directions. An unbalanced entry blocks; a
+balanced one does not. A date outside the period blocks. An agent posting above
+$10,000 blocks while a human posting the same amount does not. Round-dollar and
+stale-FX warn without blocking.
+
+Aim for 25+ assertions. A test that only restates the implementation is worth
+nothing — test the contract described in each function's comment.
+
+---
+
+## Worker H — Audit export
+**Owns:** `src/app/api/export/**`, plus the export controls on `/audit` and `/journal`
+
+The track asks for "gathering audit support" and the audit page currently
+promises an export it does not have.
+
+Add CSV download endpoints:
+
+- `GET /api/export/audit?run=<id>` — the full decision log, agent and human
+  alike, one row per event with the detail JSON flattened into readable columns.
+- `GET /api/export/exceptions?run=<id>` — every exception with its category,
+  severity, summary, suggested action, resolution and who resolved it.
+- `GET /api/export/journal?run=<id>` — entries with their lines, one row per
+  line, including blocked entries and the rule that blocked them.
+
+Quote fields correctly (embedded commas, quotes and newlines are guaranteed in
+the memo and message columns), set `Content-Disposition: attachment` with a
+sensible filename, and add a small download button to each page.
+
+An auditor should be able to open these three files and reconstruct the close
+without access to the app.
