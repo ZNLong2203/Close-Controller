@@ -3,12 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { runReconciliation } from "@/lib/matching/pipeline";
 import { decideException, type ReviewAction } from "@/lib/review";
+import { detectPeriod } from "@/lib/import/period";
 
 /** The reviewer identity. A single-user demo, but the audit trail records it either way. */
 const REVIEWER = process.env.CC_REVIEWER ?? "zkare";
 
 export async function startRun(): Promise<void> {
-  await runReconciliation("2026-08");
+  // Derived from the data rather than hard-coded: once a judge imports their own
+  // statement the open period is whatever month their bank sent, and a run
+  // pinned to the fixture's August would fail every posting on CLOSED_PERIOD.
+  await runReconciliation(detectPeriod());
   revalidatePath("/");
   revalidatePath("/exceptions");
   revalidatePath("/audit");
