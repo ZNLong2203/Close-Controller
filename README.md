@@ -44,7 +44,30 @@ cp .env.example .env      # add GEMINI_API_KEY
 npm run seed              # build the aug2026 fixture
 npm run dev               # http://localhost:3000
 npm run eval              # score the matcher against ground truth
+npm run probe:import      # assert the CSV money/date parsers on real-world shapes
 ```
+
+## Running it on your own statement
+
+The fixture exists to make the eval score meaningful, not because the system
+only works on it. `/import` takes a bank statement CSV and a general ledger
+export, guesses the column mapping from the header row, and lets you correct
+the guess before anything is written.
+
+- Both a single signed amount column and a debit/credit pair are supported.
+  Currency symbols, thousands separators, European decimal commas, accounting
+  parentheses and trailing `DR`/`CR` all parse to integer cents — never through
+  `parseFloat`, which reads `1,234.56` as `1`.
+- A row whose date or amount cannot be read *exactly* is rejected and listed
+  with its line number, not coerced. Silently correcting financial data hides
+  the error; refusing it does not.
+- The preview shows the first ten rows as they will be inserted, the row count
+  and the detected date range. Nothing is written until you confirm, and the
+  confirm step records who imported what in `audit_event`.
+
+Two sample exports in `data/samples/` demonstrate the flow without a real
+statement — deliberately different schemas from each other, and from the
+fixture.
 
 ## Why it is built this way
 

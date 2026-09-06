@@ -14,7 +14,8 @@
     "eval": "tsx --env-file-if-exists=.env scripts/eval.ts",
     "probe:rules": "tsx --env-file-if-exists=.env scripts/probe-rules.ts",
     "probe:guardrail": "tsx --env-file-if-exists=.env scripts/probe-guardrail.ts",
-    "probe:export": "tsx --env-file-if-exists=.env scripts/probe-export.ts"
+    "probe:export": "tsx --env-file-if-exists=.env scripts/probe-export.ts",
+    "probe:import": "tsx --env-file-if-exists=.env scripts/probe-import.ts"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",

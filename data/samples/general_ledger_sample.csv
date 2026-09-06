@@ -1,0 +1,20 @@
+Date,Account Code,Account Name,Memo,Vendor,Document No,Amount,Currency
+02-Mar-2026,6100,Freight and delivery,"Freight forwarding, inbound March",Northwind Logistics,INV-3101,"(1,240.00)",USD
+03-Mar-2026,6200,Software and hosting,Compute and object storage,Acme Cloud Services,INV-3102,"(4,875.60)",USD
+05-Mar-2026,6300,Professional fees,"Q1 retainer, outside counsel",Contoso Legal LLP,INV-3103,"(9,500.00)",USD
+06-Mar-2026,1100,Accounts receivable,"Customer receipt, Harborline Freight",Harborline Freight Co,INV-C204,"18,900.00",USD
+09-Mar-2026,1500,Equipment,Workshop tooling,Fabrikam Hardware,INV-3104,"(2,318.45)",USD
+10-Mar-2026,6400,Advertising,"March retainer, paid search",Tailspin Marketing,,"(3,800.00)",USD
+11-Mar-2026,6400,Advertising,Display and paid social spend,Tailspin Marketing,INV-3105,"(6,742.10)",USD
+12-Mar-2026,1500,Equipment,"Server refresh, staged delivery",Fabrikam Hardware,INV-3115,"(9,000.00)",USD
+16-Mar-2026,6700,Rent,"March rent, Unit 4 warehouse",Riverstone Properties,INV-3106,"(12,400.00)",USD
+17-Mar-2026,6800,Insurance,General liability premium,Blue Harbor Insurance,INV-3107,"(3,065.00)",USD
+18-Mar-2026,6700,Rent,April rent prepayment,Riverstone Properties,,"(4,150.00)",USD
+19-Mar-2026,6100,Freight and delivery,"Last-mile delivery, week 12",Northwind Logistics,INV-3108,(875.25),USD
+20-Mar-2026,1100,Accounts receivable,"Customer receipt, Meridian Foods",Meridian Foods Ltd,INV-C205,"5,412.75",USD
+23-Mar-2026,6200,Software and hosting,Log retention add-on,Acme Cloud Services,INV-3109,"(1,199.99)",USD
+24-Mar-2026,6200,Software and hosting,Annual support plan,Acme Cloud Services,INV-3120,"(2,780.00)",USD
+25-Mar-2026,1500,Equipment,Rack and cabling,Fabrikam Hardware,INV-3110,"(7,430.80)",USD
+26-Mar-2026,6300,Professional fees,"Contract review, supplier terms",Contoso Legal LLP,INV-3111,"(2,250.00)",USD
+30-Mar-2026,6800,Insurance,"Accrued premium, settles April",Blue Harbor Insurance,,"(1,875.00)",USD
+31-Mar-2026,6000,Contract labour,"Accrued contractor hours, March",Proseware Staffing,,"(6,120.00)",USD

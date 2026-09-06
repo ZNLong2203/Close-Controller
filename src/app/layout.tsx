@@ -12,6 +12,7 @@ const NAV = [
   { href: "/exceptions", label: "Review queue" },
   { href: "/journal", label: "Journal" },
   { href: "/audit", label: "Audit trail" },
+  { href: "/import", label: "Import CSV" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
