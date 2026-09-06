@@ -23,9 +23,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="border-b border-border bg-panel">
           <div className="mx-auto flex max-w-6xl items-center gap-8 px-6 py-3">
-            <Link href="/" className="flex items-baseline gap-2">
-              <span className="text-[15px] font-semibold tracking-tight">Close Controller</span>
-              <span className="text-[11px] uppercase tracking-widest text-muted">Aug 2026</span>
+            <Link href="/" className="text-[15px] font-semibold tracking-tight">
+              Close Controller
             </Link>
             <nav className="flex gap-5 text-[13px]">
               {NAV.map((n) => (

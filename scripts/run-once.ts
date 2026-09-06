@@ -1,9 +1,15 @@
 /** Drive one reconciliation run from the command line. */
 import { runReconciliation } from "../src/lib/matching/pipeline";
+import { detectPeriod } from "../src/lib/import/period";
 import { db } from "../src/lib/db";
 
 async function main() {
-const { runId, stats } = await runReconciliation("2026-08");
+// Same entry point the UI uses. Hard-coding the fixture's month here made the
+// CLI disagree with the app the moment an imported statement covered a
+// different period, and every posting failed CLOSED_PERIOD.
+const period = detectPeriod();
+const { runId, stats } = await runReconciliation(period);
+console.log(`period ${period}`);
 console.log(`\nrun ${runId}`);
 console.table(stats);
 

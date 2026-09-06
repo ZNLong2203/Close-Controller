@@ -5,6 +5,13 @@ import { exceptionCategories, journalTotals, latestRun, policyViolations, tierBr
 export const dynamic = "force-dynamic";
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+
+/** '2026-03' -> 'March 2026'. The period comes from the data, so the heading must too. */
+function periodLabel(period: string): string {
+  const [y, m] = period.split("-").map(Number);
+  if (!y || !m) return period;
+  return `${new Date(Date.UTC(y, m - 1, 1)).toLocaleString("en-US", { month: "long", timeZone: "UTC" })} ${y}`;
+}
 const usd = (n: number) => (n === 0 ? "$0.00" : n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`);
 
 function Stat({
@@ -36,8 +43,8 @@ export default function Dashboard() {
       <div className="rounded-lg border border-border bg-panel p-10 text-center">
         <h1 className="text-lg font-semibold">No reconciliation has been run yet</h1>
         <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-muted">
-          Seed the fixture with <code className="rounded bg-bg px-1.5 py-0.5">npm run seed</code>, then run a close over
-          August 2026.
+          Seed the fixture with <code className="rounded bg-bg px-1.5 py-0.5">npm run seed</code>, or import your own
+          CSVs. The period is taken from the data.
         </p>
         <div className="mt-6">
           <RunButton />
@@ -59,7 +66,7 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">August 2026 close</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{periodLabel(run.period)} close</h1>
           <p className="tabular mt-1 text-[12px] text-muted">
             {run.id} · {s?.totalBankTxns ?? 0} bank lines against {s?.totalGlEntries ?? 0} ledger entries ·{" "}
             {((s?.wallMs ?? 0) / 1000).toFixed(2)}s
