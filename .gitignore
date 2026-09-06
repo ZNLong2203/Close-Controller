@@ -3,7 +3,13 @@ node_modules
 .env
 .env.local
 *.db
+*.db-shm
+*.db-wal
 *.db-journal
 data/*.csv
 data/*.json
 .DS_Store
+
+# Internal working material: battle plan, demo scripts, voice-over, submission
+# drafts. Public-facing architecture and flow docs live in docs/ instead.
+private/

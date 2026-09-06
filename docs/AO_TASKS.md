@@ -34,12 +34,15 @@ Implement `runLlmMatcher` per the contract, and make `src/lib/trace.ts` post rea
 spans to Neatlogs when `NEATLOGS_API_KEY` is set (silent no-op otherwise — the
 pipeline must never fail because tracing is down).
 
-Use `@anthropic-ai/sdk`. Default `claude-sonnet-5`; escalate to `claude-opus-5`
-only when sonnet reports confidence < 0.6 on a candidate, and record which model
-decided in `MatchProposal.model`. Batch the residue into grouped requests — one
-request per transaction is disqualifying on cost.
+Use `@google/genai` keyed by `GEMINI_API_KEY`. Two-tier routing:
+`gemini-3.5-flash-lite` handles the residue, and only candidates it returns with
+confidence < 0.6 are re-run on `gemini-3.8-flash`. Record the deciding model in
+`MatchProposal.model` and return per-model call counts in `modelBreakdown` — the
+eval harness reports the routing split. Batch the residue into grouped requests;
+one request per transaction is disqualifying on cost.
 
-Structured output only (tool use / JSON schema). Every proposal must carry
+Structured output only: `responseMimeType: "application/json"` plus a
+`responseSchema`. Never parse free text. Every proposal must carry
 `evidence` naming the concrete fields that drove it; a match a reviewer cannot
 verify is worse than no match.
 

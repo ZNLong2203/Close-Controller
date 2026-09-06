@@ -51,7 +51,10 @@ export async function runReconciliation(period = "2026-08"): Promise<{ runId: st
   s2.end({ matched: llmResult.proposals.length, cost: llmResult.costUsd });
   audit({
     runId, actor: "agent:matcher", action: "llm.completed", traceId,
-    detail: { proposals: llmResult.proposals.length, calls: llmResult.llmCallCount, costUsd: llmResult.costUsd },
+    detail: {
+      proposals: llmResult.proposals.length, calls: llmResult.llmCallCount,
+      costUsd: llmResult.costUsd, modelBreakdown: llmResult.modelBreakdown,
+    },
   });
 
   // ---- tier 3: confidence gate ----
