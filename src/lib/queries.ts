@@ -267,3 +267,39 @@ export function journalTotals(runId: string): { posted: number; blocked: number;
     ...sums,
   };
 }
+
+/**
+ * One row per category, for the filter chips. Distinct from `exceptionSummary`,
+ * which splits by severity as well — useful in the dashboard table, wrong for a
+ * filter, where two chips reading `unmatched_bank` would both lead to the same
+ * place.
+ */
+export interface CategoryChip {
+  category: string;
+  severity: Severity;
+  open: number;
+  total: number;
+}
+
+export function exceptionCategories(runId: string): CategoryChip[] {
+  return db()
+    .prepare(
+      `SELECT category,
+              MIN(CASE severity WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END) AS rank,
+              SUM(CASE WHEN status='open' THEN 1 ELSE 0 END) AS open,
+              COUNT(*) AS total
+         FROM exception WHERE run_id = ?
+        GROUP BY category
+        ORDER BY rank, total DESC`
+    )
+    .all(runId)
+    .map((r) => {
+      const row = r as { category: string; rank: number; open: number; total: number };
+      return {
+        category: row.category,
+        severity: (["high", "medium", "low"] as const)[row.rank] ?? "low",
+        open: row.open,
+        total: row.total,
+      };
+    });
+}

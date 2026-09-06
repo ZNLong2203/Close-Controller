@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { ReviewPanel } from "@/components/ReviewPanel";
-import { exceptionSummary, exceptions, latestRun, matchDetail, parseEvidence } from "@/lib/queries";
+import { exceptionCategories, exceptions, latestRun, matchDetail, parseEvidence } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,7 @@ export default async function Queue({
     status: showStatus === "all" ? undefined : showStatus,
   });
   const selected = rows.find((r) => r.id === sp.id) ?? rows[0];
-  const categories = exceptionSummary(run.id);
+  const categories = exceptionCategories(run.id);
 
   const match = selected?.match_id ? matchDetail(selected.match_id) : undefined;
   const evidence = parseEvidence(selected?.evidence_json ?? match?.evidence_json ?? null);
