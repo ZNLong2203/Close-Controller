@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DownloadCsv } from "@/components/DownloadCsv";
 import { auditEvents, latestRun } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -24,12 +25,20 @@ export default async function Audit({ searchParams }: { searchParams: Promise<{ 
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Audit trail</h1>
-        <p className="mt-1 text-[13px] text-muted">
-          Agent and human decisions in one log, in the same shape. This is what makes the export usable as audit
-          support rather than as a changelog.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Audit trail</h1>
+          <p className="mt-1 text-[13px] text-muted">
+            Agent and human decisions in one log, in the same shape. This is what makes the export usable as audit
+            support rather than as a changelog.
+          </p>
+        </div>
+        {/* The exports carry the whole run, not the filtered view on screen —
+            an auditor asked for the close, not for what a reviewer had open. */}
+        <div className="flex shrink-0 gap-2">
+          <DownloadCsv href={`/api/export/audit?run=${run.id}`} label="Decision log CSV" />
+          <DownloadCsv href={`/api/export/exceptions?run=${run.id}`} label="Exceptions CSV" />
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -74,7 +83,10 @@ export default async function Audit({ searchParams }: { searchParams: Promise<{ 
           </tbody>
         </table>
       </div>
-      <p className="text-[12px] text-muted">Showing the most recent {events.length} events for run {run.id}.</p>
+      <p className="text-[12px] text-muted">
+        Showing the most recent {events.length} events for run {run.id}. The CSV export carries every event of the
+        run, with each detail field in its own column.
+      </p>
     </div>
   );
 }
