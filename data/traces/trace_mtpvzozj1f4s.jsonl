@@ -1,0 +1,3 @@
+{"traceId":"trace_mtpvzozj1f4s","name":"reconciliation.start","startedAt":"2026-09-06T14:08:05.695Z","durationMs":0,"meta":{"runId":"run_mtpvzozj7577d","period":"2026-08"}}
+{"traceId":"trace_mtpvzozj1f4s","name":"rules","startedAt":"2026-09-06T14:08:05.698Z","durationMs":14,"input":{"bank":182,"gl":175,"disabled":false},"output":{"matched":142,"residueBank":32}}
+{"traceId":"trace_mtpvzozj1f4s","name":"llm","startedAt":"2026-09-06T14:08:05.712Z","durationMs":0,"input":{"bank":32,"gl":33},"output":{"matched":0,"cost":0}}

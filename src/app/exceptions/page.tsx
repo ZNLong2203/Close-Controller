@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EvidencePanel } from "@/components/EvidencePanel";
 import { ReviewPanel } from "@/components/ReviewPanel";
 import { exceptionSummary, exceptions, latestRun, matchDetail, parseEvidence } from "@/lib/queries";
 
@@ -94,19 +95,7 @@ export default async function Queue({
               <p className="mt-2 text-[14px] leading-relaxed">{selected.summary}</p>
             </div>
 
-            {evidence.length > 0 && (
-              <div>
-                <h3 className="text-[11px] font-semibold uppercase tracking-widest text-muted">Evidence</h3>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  {evidence.map((e, i) => (
-                    <div key={i} className="rounded-md border border-border bg-bg p-2.5">
-                      <div className="text-[11px] font-medium text-muted">{e.label}</div>
-                      <div className="tabular mt-1 text-[12px] leading-snug">{e.excerpt}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <EvidencePanel items={evidence} />
 
             {match && (
               <div className="rounded-md border border-border bg-bg p-3">

@@ -159,3 +159,111 @@ export const journalEntries = (runId: string, status?: string): JournalRow[] =>
         WHERE run_id = ? ${status ? "AND status = ?" : ""} ORDER BY entry_date DESC, id DESC LIMIT 200`
     )
     .all(...(status ? [runId, status] : [runId])) as JournalRow[];
+
+/** Match counts and spend per tier — the evidence behind the cost claim. */
+export interface TierRow {
+  tier: "Deterministic rules" | "Gemini" | "Reviewer override";
+  detail: string;
+  matches: number;
+  costUsd: number;
+}
+
+export function tierBreakdown(runId: string): TierRow[] {
+  const rows = db()
+    .prepare(
+      `SELECT method, model, COUNT(*) AS n, COALESCE(SUM(cost_usd), 0) AS cost
+         FROM match WHERE run_id = ? AND status != 'rejected'
+        GROUP BY method, model`
+    )
+    .all(runId) as { method: string; model: string | null; n: number; cost: number }[];
+
+  const rules = rows.filter((r) => r.method.startsWith("rule"));
+  const llm = rows.filter((r) => r.method === "llm");
+  const human = rows.filter((r) => r.method === "human");
+
+  const out: TierRow[] = [];
+  if (rules.length) {
+    out.push({
+      tier: "Deterministic rules",
+      detail: rules.map((r) => `${r.method.replace("rule_", "")} ${r.n}`).join(" · "),
+      matches: rules.reduce((s, r) => s + r.n, 0),
+      costUsd: 0,
+    });
+  }
+  out.push({
+    tier: "Gemini",
+    detail: llm.length ? [...new Set(llm.map((r) => r.model ?? "unknown"))].join(" · ") : "no residue reached the model",
+    matches: llm.reduce((s, r) => s + r.n, 0),
+    costUsd: llm.reduce((s, r) => s + r.cost, 0),
+  });
+  if (human.length) {
+    out.push({
+      tier: "Reviewer override",
+      detail: "posted against the system's advice",
+      matches: human.reduce((s, r) => s + r.n, 0),
+      costUsd: 0,
+    });
+  }
+  return out;
+}
+
+export interface JournalLine {
+  account_code: string;
+  debit_cents: number;
+  credit_cents: number;
+}
+
+export interface JournalEntryFull {
+  id: string;
+  entry_date: string;
+  memo: string;
+  status: string;
+  posted_by: string | null;
+  match_id: string | null;
+  lines: JournalLine[];
+  violations: { rule_code: string; severity: string; message: string }[];
+}
+
+export function journalWithLines(runId: string, status?: string, limit = 250): JournalEntryFull[] {
+  const d = db();
+  const entries = d
+    .prepare(
+      `SELECT id, entry_date, memo, status, posted_by, match_id FROM journal_entry
+        WHERE run_id = ? ${status ? "AND status = ?" : ""}
+        ORDER BY CASE status WHEN 'blocked' THEN 0 ELSE 1 END, entry_date DESC, id DESC
+        LIMIT ?`
+    )
+    .all(...(status ? [runId, status, limit] : [runId, limit])) as Omit<JournalEntryFull, "lines" | "violations">[];
+
+  const lineStmt = d.prepare(
+    `SELECT account_code, debit_cents, credit_cents FROM journal_line WHERE je_id = ? ORDER BY id`
+  );
+  const violStmt = d.prepare(
+    `SELECT rule_code, severity, message FROM policy_violation WHERE subject_id = ? ORDER BY id`
+  );
+
+  return entries.map((e) => ({
+    ...e,
+    lines: lineStmt.all(e.id) as JournalLine[],
+    violations: violStmt.all(e.id) as { rule_code: string; severity: string; message: string }[],
+  }));
+}
+
+export function journalTotals(runId: string): { posted: number; blocked: number; debits: number; credits: number } {
+  const d = db();
+  const counts = d
+    .prepare(`SELECT status, COUNT(*) AS n FROM journal_entry WHERE run_id = ? GROUP BY status`)
+    .all(runId) as { status: string; n: number }[];
+  const sums = d
+    .prepare(
+      `SELECT COALESCE(SUM(l.debit_cents),0) AS debits, COALESCE(SUM(l.credit_cents),0) AS credits
+         FROM journal_line l JOIN journal_entry e ON e.id = l.je_id
+        WHERE e.run_id = ? AND e.status = 'posted'`
+    )
+    .get(runId) as { debits: number; credits: number };
+  return {
+    posted: counts.find((c) => c.status === "posted")?.n ?? 0,
+    blocked: counts.find((c) => c.status === "blocked")?.n ?? 0,
+    ...sums,
+  };
+}

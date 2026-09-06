@@ -21,7 +21,20 @@ reviewer as a typed queue where every item already carries its evidence.
    rest to a human review queue.
 4. Runs every posting through a policy engine that will refuse to book a
    duplicate payment, an unbalanced entry, or a posting into a closed period.
-5. Records every decision — agent and human — in an exportable audit trail.
+5. Writes balanced journal entries, keeping refused ones visible rather than
+   discarding them.
+6. Records every decision — agent and human — in an exportable audit trail.
+
+## Measured against the LLM-only baseline
+
+| | Baseline | Close Controller |
+|---|---|---|
+| Match F1 | 91.8% | **99.1%** |
+| False auto-posts | 1 | **0** |
+| Cost per 1,000 txns | $0.59 | **$0.08** |
+| Wall time | 57.3 s | **11.8 s** |
+
+Full table, including per-category exception detection: [docs/RESULTS.md](docs/RESULTS.md).
 
 ## Quickstart
 
@@ -41,7 +54,14 @@ reviewer has to be able to explain why the system acted, and to an auditor
 tier is what makes the model's contribution reviewable — and it is also why the
 per-transaction cost stays low.
 
-Measured results are in [docs/RESULTS.md](docs/RESULTS.md).
+## Screens
+
+| | |
+|---|---|
+| **Run** | Trigger a close; auto-match rate, cost, and which tier resolved what |
+| **Review queue** | Typed exceptions with bank and ledger side by side, and the fields the system cited |
+| **Journal** | Every entry produced, expandable to its lines; blocked entries kept with their reason |
+| **Audit trail** | Agent and human decisions in one log, filterable, exportable |
 
 ## Docs
 
