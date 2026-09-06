@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DownloadCsv } from "@/components/DownloadCsv";
 import { journalTotals, journalWithLines, latestRun } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,10 @@ export default async function Journal({ searchParams }: { searchParams: Promise<
             indistinguishable from a bug.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* The export carries the whole run, not the filtered view on screen —
+              an auditor asked for the close, not for what a reviewer had open. */}
+          <DownloadCsv href={`/api/export/journal?run=${run.id}`} label="Journal CSV" />
           {FILTERS.map((f) => (
             <Link
               key={f.key}

@@ -77,6 +77,7 @@ contained and reviewable.
 | `src/lib/policy/guardrails.ts` | Pre-posting policy checks, block vs. warn |
 | `src/lib/posting.ts` | Approved match → balanced journal entry |
 | `src/lib/audit.ts` | Append-only decision log, agent and human alike |
+| `src/lib/export/*` | Read models + RFC 4180 writer behind the three CSV exports |
 | `src/lib/trace.ts` | Neatlogs spans; degrades to no-op when unconfigured |
 
 ## Data model

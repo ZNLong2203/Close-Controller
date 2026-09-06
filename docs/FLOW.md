@@ -73,3 +73,21 @@ system that only validates its own actions has no answer for it.
 A blocked entry is persisted with `status = 'blocked'` and a `policy_violation`
 row. It is never silently dropped — a refusal you cannot point at is
 indistinguishable from a bug.
+
+## Taking the close out of the app
+
+Three CSV endpoints, each scoped to one run and each downloadable from the UI:
+
+| Endpoint | One row per | Carries |
+|---|---|---|
+| `GET /api/export/audit?run=<id>` | audit event | actor, action, entity, and the event's detail JSON flattened into one column per field |
+| `GET /api/export/exceptions?run=<id>` | exception | category, severity, summary, suggested action, resolution and resolver, plus both sides of the pair |
+| `GET /api/export/journal?run=<id>` | journal line | entry, line, entry totals, and — for a blocked entry — the rule code and message that refused it |
+
+`run` defaults to the latest run. Fields are RFC 4180 quoted, so the commas and
+quotes inside a memo or a policy message survive the trip; `npm run probe:export`
+proves it by round-tripping a hostile close through a strict parser.
+
+The three files are the deliverable, not a convenience: an auditor holding them
+can reconstruct the close — what was matched, what was refused and why, what a
+human decided — without an account on the system that produced it.
