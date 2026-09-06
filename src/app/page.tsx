@@ -121,7 +121,11 @@ export default function Dashboard() {
         <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-widest text-muted">Where the matches came from</h2>
         <div className="overflow-hidden rounded-lg border border-border bg-panel">
           {tiers.map((t, i) => (
-            <div key={i} className="flex items-center gap-4 border-b border-border px-4 py-3 last:border-0">
+            <Link
+              key={i}
+              href={`/matches?tier=${t.tier === "Gemini" ? "llm" : t.tier === "Reviewer override" ? "human" : "rules"}`}
+              className="flex items-center gap-4 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-accent-soft"
+            >
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
                   <span className="text-[13px] font-medium">{t.tier}</span>
@@ -138,12 +142,12 @@ export default function Dashboard() {
               <div className="tabular w-24 text-right text-[13px] text-muted">
                 {t.costUsd === 0 ? "free" : usd(t.costUsd)}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
         <p className="mt-2 text-[12px] leading-relaxed text-muted">
           The model only ever sees what the rules could not place. That is why the cost line stays small as volume
-          grows — spend tracks ambiguity, not transaction count.
+          grows — spend tracks ambiguity, not transaction count. Open a tier to read every pairing it made.
         </p>
       </section>
 

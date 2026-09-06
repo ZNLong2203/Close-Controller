@@ -82,8 +82,17 @@ Rules you must follow:
   leaving the account and can only pair with ledger entries of the same sign.
 - Leaving a row unmatched is a correct answer and is much better than a wrong
   pairing. A false match costs a controller more time than an unmatched row.
-- Every proposal needs a reasoning that names the concrete fields you used. A
-  match a reviewer cannot verify in a few seconds is not useful.
+- The reasoning is one sentence naming the actual link a reviewer could not see
+  at a glance: the trading name against the legal name, the memo phrase against
+  the vendor, the transposed characters in a reference. Quote the real values.
+  Do NOT restate ids and do NOT repeat the amounts — the reviewer is already
+  looking at both rows. Restating them is a wasted sentence; naming the link is
+  the whole point. Write "ACME CLOUD SVCS on the statement is Acme Cloud
+  Services in the ledger, same amount one day apart", not "this bank line
+  matches that ledger entry for the same value".
+- The signal is a short snake_case tag for the kind of link, for example
+  vendor_name_abbreviation, memo_describes_spend, transposed_reference or
+  processor_payout.
 
 Calibrate confidence honestly:
   0.95+  the amounts agree exactly and the semantic link is unambiguous

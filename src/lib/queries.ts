@@ -303,3 +303,56 @@ export function exceptionCategories(runId: string): CategoryChip[] {
       };
     });
 }
+
+export interface MatchRow {
+  id: string;
+  status: string;
+  confidence: number;
+  method: string;
+  model: string | null;
+  reasoning: string;
+  evidence_json: string | null;
+  bank_ids: string | null;
+  gl_ids: string | null;
+  amount_cents: number;
+}
+
+/**
+ * Every match a run produced, newest-highest-confidence first.
+ *
+ * This view exists because the model tier was otherwise invisible: its matches
+ * post above the confidence gate, so they never reach the review queue, and the
+ * only trace of them was a count on the dashboard. A claim that the model
+ * earned its place needs to be inspectable.
+ */
+export function matchesForRun(runId: string, tier?: "rules" | "llm" | "human"): MatchRow[] {
+  const where = ["m.run_id = ?", "m.status != 'rejected'"];
+  const args: unknown[] = [runId];
+  if (tier === "rules") where.push("m.method LIKE 'rule_%'");
+  if (tier === "llm") where.push("m.method = 'llm'");
+  if (tier === "human") where.push("m.method = 'human'");
+
+  return db()
+    .prepare(
+      `SELECT m.id, m.status, m.confidence, m.method, m.model, m.reasoning, m.evidence_json,
+              (SELECT GROUP_CONCAT(entity_id) FROM match_line WHERE match_id=m.id AND entity_type='bank_txn') AS bank_ids,
+              (SELECT GROUP_CONCAT(entity_id) FROM match_line WHERE match_id=m.id AND entity_type='gl_entry') AS gl_ids,
+              COALESCE((SELECT SUM(amount_cents) FROM match_line WHERE match_id=m.id AND entity_type='bank_txn'), 0) AS amount_cents
+         FROM match m
+        WHERE ${where.join(" AND ")}
+        ORDER BY m.confidence DESC, m.id`
+    )
+    .all(...args) as MatchRow[];
+}
+
+export function matchTierCounts(runId: string): { rules: number; llm: number; human: number } {
+  const rows = db()
+    .prepare(`SELECT method, COUNT(*) n FROM match WHERE run_id = ? AND status != 'rejected' GROUP BY method`)
+    .all(runId) as { method: string; n: number }[];
+  const sum = (p: (m: string) => boolean) => rows.filter((r) => p(r.method)).reduce((a, r) => a + r.n, 0);
+  return {
+    rules: sum((m) => m.startsWith("rule_")),
+    llm: sum((m) => m === "llm"),
+    human: sum((m) => m === "human"),
+  };
+}
