@@ -13,3 +13,7 @@ data/*.json
 # Internal working material: battle plan, demo scripts, voice-over, submission
 # drafts. Public-facing architecture and flow docs live in docs/ instead.
 private/
+
+# build artefacts
+tsconfig.tsbuildinfo
+next-env.d.ts
