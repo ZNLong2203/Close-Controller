@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
 import type { BankTxn, EvidenceItem, GlEntry, MatchProposal } from "../types";
 import { span } from "../trace";
 import type { Side } from "./normalize";
@@ -152,7 +152,9 @@ export async function runLlmMatcher(side: Side, traceId: string): Promise<LlmTie
           temperature: 0,
           // The fast tier is doing recognition, not deliberation. Paying for
           // reasoning tokens here would erase the reason it is the fast tier.
-          ...(model === FAST ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+          // (Gemini 3.x rejects thinkingBudget: 0 outright — MINIMAL is how you
+          // ask for no deliberation, and it does return zero thought tokens.)
+          ...(model === FAST ? { thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL } } : {}),
         },
       });
 
@@ -160,9 +162,11 @@ export async function runLlmMatcher(side: Side, traceId: string): Promise<LlmTie
       breakdown[model] = (breakdown[model] ?? 0) + 1;
       const u = res.usageMetadata;
       const rate = RATES[model] ?? RATES[FAST];
+      // Thinking tokens bill at the output rate, so the strong tier's real cost
+      // is invisible unless they are counted.
+      const outTokens = (u?.candidatesTokenCount ?? 0) + (u?.thoughtsTokenCount ?? 0);
       const callCost =
-        ((u?.promptTokenCount ?? 0) / 1e6) * rate.in +
-        ((u?.candidatesTokenCount ?? 0) / 1e6) * rate.out;
+        ((u?.promptTokenCount ?? 0) / 1e6) * rate.in + (outTokens / 1e6) * rate.out;
       cost += callCost;
 
       const parsed = JSON.parse(res.text ?? "{}") as { proposals?: RawProposal[] };

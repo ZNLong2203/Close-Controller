@@ -7,12 +7,12 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "db:reset": "tsx scripts/reset-db.ts",
-    "seed": "tsx scripts/seed.ts",
-    "run:once": "tsx scripts/run-once.ts",
-    "eval": "tsx scripts/eval.ts",
-    "probe:rules": "tsx scripts/probe-rules.ts",
-    "probe:guardrail": "tsx scripts/probe-guardrail.ts"
+    "db:reset": "tsx --env-file-if-exists=.env scripts/reset-db.ts",
+    "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
+    "run:once": "tsx --env-file-if-exists=.env scripts/run-once.ts",
+    "eval": "tsx --env-file-if-exists=.env scripts/eval.ts",
+    "probe:rules": "tsx --env-file-if-exists=.env scripts/probe-rules.ts",
+    "probe:guardrail": "tsx --env-file-if-exists=.env scripts/probe-guardrail.ts"
   },
   "dependencies": {
     "@google/genai": "^2.21.0",
