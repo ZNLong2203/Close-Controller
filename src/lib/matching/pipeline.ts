@@ -34,8 +34,14 @@ export async function runReconciliation(period = "2026-08"): Promise<{ runId: st
   const side: Side = { bank, gl };
 
   // ---- tier 1: deterministic ----
-  const s1 = span(traceId, "rules", { bank: bank.length, gl: gl.length });
-  const ruleResult = runRuleMatchers(side);
+  // The baseline the eval harness compares against: no deterministic tier at
+  // all, every transaction routed through the model. It exists to make the
+  // tiering claim falsifiable rather than asserted.
+  const rulesDisabled = process.env.CC_DISABLE_RULES === "1";
+  const s1 = span(traceId, "rules", { bank: bank.length, gl: gl.length, disabled: rulesDisabled });
+  const ruleResult = rulesDisabled
+    ? { proposals: [], residue: { bankIds: bank.map((b) => b.id), glIds: gl.map((g) => g.id) } }
+    : runRuleMatchers(side);
   s1.end({ matched: ruleResult.proposals.length, residueBank: ruleResult.residue.bankIds.length });
   audit({
     runId, actor: "agent:matcher", action: "rules.completed", traceId,
