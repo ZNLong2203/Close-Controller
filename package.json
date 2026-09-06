@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test 'src/**/*.test.ts'",
     "db:reset": "tsx --env-file-if-exists=.env scripts/reset-db.ts",
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
     "run:once": "tsx --env-file-if-exists=.env scripts/run-once.ts",
