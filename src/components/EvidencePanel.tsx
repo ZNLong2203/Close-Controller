@@ -31,16 +31,25 @@ export function EvidencePanel({ items }: { items: EvidenceItem[] }) {
     </div>
   );
 
+  // A three-way variance is an argument between documents, not between a bank
+  // line and a ledger entry. Rendering two empty placeholders there reads as a
+  // broken panel, so the two-sided view only appears when there are two sides.
+  const hasSides = bank.length > 0 || ledger.length > 0;
+
   return (
     <div className="space-y-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Side title="Bank" rows={bank} empty="No bank line — this exists only in the ledger." />
-        <Side title="Ledger" rows={ledger} empty="No ledger entry — this cash movement was never booked." />
-      </div>
+      {hasSides && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Side title="Bank" rows={bank} empty="No bank line — this exists only in the ledger." />
+          <Side title="Ledger" rows={ledger} empty="No ledger entry — this cash movement was never booked." />
+        </div>
+      )}
 
       {signals.length > 0 && (
         <div>
-          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted">What linked them</div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted">
+            {hasSides ? "What linked them" : "Supporting documents"}
+          </div>
           <div className="space-y-1.5">
             {signals.map((e, i) => (
               <div key={i} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md bg-bg px-2.5 py-2">

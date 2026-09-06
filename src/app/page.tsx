@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { RunButton } from "@/components/RunButton";
-import { exceptionSummary, journalTotals, latestRun, policyViolations, tierBreakdown } from "@/lib/queries";
+import { exceptionCategories, journalTotals, latestRun, policyViolations, tierBreakdown } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -47,12 +47,13 @@ export default function Dashboard() {
   }
 
   const s = run.stats;
-  const summary = exceptionSummary(run.id);
+  const summary = exceptionCategories(run.id);
   const openTotal = summary.reduce((a, c) => a + c.open, 0);
   const blocks = policyViolations(run.id, 8).filter((v) => v.severity === "block");
   const tiers = tierBreakdown(run.id);
   const totals = journalTotals(run.id);
   const totalMatches = tiers.reduce((a, t) => a + t.matches, 0) || 1;
+  const costPer1k = s?.totalBankTxns ? ((s.costUsd ?? 0) / s.totalBankTxns) * 1000 : 0;
 
   return (
     <div className="space-y-8">
@@ -75,7 +76,11 @@ export default function Dashboard() {
           tone="accent"
         />
         <Stat label="Awaiting review" value={String(openTotal)} sub="typed, with evidence attached" />
-        <Stat label="Model cost" value={usd(s?.costUsd ?? 0)} sub={`${s?.llmCallCount ?? 0} API calls this close`} />
+        <Stat
+          label="Model cost"
+          value={`${usd(costPer1k)} / 1k`}
+          sub={`${usd(s?.costUsd ?? 0)} for this close · ${s?.llmCallCount ?? 0} API calls`}
+        />
         <Stat
           label="Refused by policy"
           value={String(totals.blocked)}
@@ -147,9 +152,8 @@ export default function Dashboard() {
             <thead>
               <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-muted">
                 <th className="px-4 py-2.5 font-medium">Category</th>
-                <th className="px-4 py-2.5 font-medium">Severity</th>
+                <th className="px-4 py-2.5 font-medium">Highest severity</th>
                 <th className="px-4 py-2.5 text-right font-medium">Open</th>
-                <th className="px-4 py-2.5 text-right font-medium">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -174,7 +178,6 @@ export default function Dashboard() {
                     </span>
                   </td>
                   <td className="tabular px-4 py-2.5 text-right font-medium">{c.open}</td>
-                  <td className="tabular px-4 py-2.5 text-right text-muted">{c.total}</td>
                 </tr>
               ))}
             </tbody>

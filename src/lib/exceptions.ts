@@ -1,7 +1,11 @@
 import { db, id, nowIso } from "./db";
 import { audit } from "./audit";
 import { bankRefs, glRefs } from "./matching/normalize";
-import { CONFIDENCE, type BankTxn, type ExceptionCategory, type GlEntry, type MatchProposal, type Severity } from "./types";
+import {
+  CONFIDENCE,
+  type BankTxn, type EvidenceItem, type ExceptionCategory,
+  type GlEntry, type MatchProposal, type Severity,
+} from "./types";
 
 /**
  * Turns everything unresolved into a typed, actionable queue.
@@ -19,7 +23,7 @@ interface Draft {
   matchId?: string;
   bankTxnId?: string;
   glEntryId?: string;
-  evidence?: { label: string; excerpt: string }[];
+  evidence?: EvidenceItem[];
 }
 
 const money = (c: number) => `${c < 0 ? "-" : ""}$${Math.abs(c / 100).toFixed(2)}`;
@@ -164,6 +168,15 @@ export function buildExceptions(
       severity: over > t.recv_amt * 0.1 ? "high" : "medium",
       summary: `${t.invoice_no} from ${t.vendor} bills ${money(t.inv_amt)} against ${t.po_no} but only ${money(t.recv_amt)} was received — over-billed by ${money(over)} (${((over / (t.recv_amt || 1)) * 100).toFixed(1)}%).`,
       suggestedAction: "Hold payment and raise a query with the vendor.",
+      // The three documents side by side are the whole argument here. Without
+      // them a reviewer has to go and find the PO themselves, which is the work
+      // this queue exists to remove.
+      evidence: [
+        { label: `Invoice ${t.invoice_no}`, excerpt: `${t.vendor} · billed ${money(t.inv_amt)}`, source_uri: t.source_uri },
+        { label: `Purchase order ${t.po_no}`, excerpt: `authorised ${money(t.po_amt)}` },
+        { label: "Goods receipt", excerpt: `received ${money(t.recv_amt)} against ${t.po_no}` },
+        { label: "Variance", excerpt: `Invoice exceeds what was received by ${money(over)} — ${((over / (t.recv_amt || 1)) * 100).toFixed(1)}% over` },
+      ],
     });
   }
 
