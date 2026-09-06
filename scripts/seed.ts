@@ -171,6 +171,98 @@ for (let i = 0; i < 10; i++) {
   if (overBill) gt({ relation: "exception_expected", expected_exception: "three_way_variance", note: `${poNo} invoice exceeds receipt by 12%` });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Cases below are deliberately unreachable by deterministic rules. They are why
+// the LLM tier exists: each one needs semantic judgement that no amount of
+// string normalisation will produce. If the rule tier ever starts matching
+// these, the rules have become reckless and the eval will show it as precision
+// loss rather than as a win.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── 11. Vendor trades under an abbreviated name on the bank statement. ───────
+// Token overlap sits below the fuzzy floor; a human reads "SVCS" as "Services"
+// instantly and so does a model. Rules cannot without a hand-built alias table.
+const ALIASES: [string, string][] = [
+  ["Acme Cloud Services", "ACME CLOUD SVCS"],
+  ["Northwind Logistics", "NORTHWIND FREIGHT"],
+  ["Adventure Works Travel", "ADV WORKS TVL"],
+  ["Tailspin Marketing", "TAILSPIN MKTG GRP"],
+  ["Litware Analytics", "LITWARE DATA SCIENCE"],
+  ["Proseware Staffing", "PROSEWARE PEOPLE OPS"],
+  ["Contoso Legal LLP", "CONTOSO ATTORNEYS"],
+  ["Fabrikam Hardware", "FABRIKAM INDUSTRIAL"],
+];
+for (let i = 0; i < ALIASES.length; i++) {
+  const [legal, trading] = ALIASES[i];
+  const d0 = 3 + i * 3;
+  const amt = -cents(1500 + i * 427.5);
+  const g = addGl({ booked_on: day(d0), amount_cents: amt, memo: `${legal} services`, account_code: ACCOUNTS[legal], vendor: legal });
+  const b = addBank({ posted_on: day(d0 + (i % 3)), amount_cents: amt, description: `ACH DEBIT ${trading}`, counterparty: trading });
+  gt({ bank_txn_id: b, gl_entry_id: g, relation: "match", note: `vendor alias: ${trading} = ${legal}` });
+}
+
+// ── 12. Ledger memo is free text with no vendor field at all. ────────────────
+// The accountant wrote what the spend was for, not who it was to. Matching
+// requires inferring the party from the nature of the expense.
+const MEMOS: [string, string][] = [
+  ["Q3 retainer - outside counsel", "Contoso Legal LLP"],
+  ["Employer of record - contractors", "Proseware Staffing"],
+  ["Conference booth and airfare", "Adventure Works Travel"],
+  ["Compute and object storage", "Acme Cloud Services"],
+  ["Paid search and display spend", "Tailspin Marketing"],
+  ["Freight forwarding - inbound", "Northwind Logistics"],
+];
+for (let i = 0; i < MEMOS.length; i++) {
+  const [memo, vendor] = MEMOS[i];
+  const d0 = 5 + i * 4;
+  const amt = -cents(2200 + i * 318.75);
+  const g = addGl({ booked_on: day(d0), amount_cents: amt, memo, account_code: ACCOUNTS[vendor], vendor: null });
+  const b = addBank({ posted_on: day(d0 + 1), amount_cents: amt, description: `WIRE OUT ${vendor.toUpperCase()}`, counterparty: vendor });
+  gt({ bank_txn_id: b, gl_entry_id: g, relation: "match", note: `memo inference: "${memo}" -> ${vendor}` });
+}
+
+// ── 13. Payment-processor payout: one deposit, several customer invoices. ────
+// The bank sees a single settlement from Stripe. The ledger sees three separate
+// receivables from three unrelated customers. No shared party, no shared ref.
+for (let i = 0; i < 3; i++) {
+  const legs: string[] = [];
+  let total = 0;
+  for (let j = 0; j < 3; j++) {
+    const v = VENDORS[(i * 3 + j) % VENDORS.length];
+    const amt = cents(700 + (i * 3 + j) * 233.5);
+    total += amt;
+    legs.push(addGl({ booked_on: day(10 + i * 5), amount_cents: amt, memo: `Customer receipt ${v}`, account_code: "1100", vendor: v, doc_type: "invoice" }));
+  }
+  const b = addBank({ posted_on: day(12 + i * 5), amount_cents: total, description: `STRIPE PAYOUT BATCH 88${200 + i}`, counterparty: "Stripe Payments" });
+  for (const g of legs) gt({ bank_txn_id: b, gl_entry_id: g, relation: "match", note: `PSP payout: 1 deposit covers 3 receivables` });
+}
+
+// ── 14. Reference transposed by a human, party field useless. ────────────────
+// "INV-9O01" with a letter O. The only signal is the near-miss reference, and
+// exact-string bucketing cannot see it.
+for (let i = 0; i < 4; i++) {
+  const v = pick(VENDORS);
+  const good = `INV-52${i}1`;
+  const typo = good.replace("0", "O").replace("5", "S");
+  const amt = -cents(3300 + i * 512.25);
+  const g = addGl({ booked_on: day(14 + i * 2), amount_cents: amt, memo: `Supplier invoice ${good}`, account_code: ACCOUNTS[v], vendor: v, doc_ref: good });
+  const b = addBank({ posted_on: day(16 + i * 2), amount_cents: amt, description: `VENDOR PAYMENT REF ${typo}`, counterparty: null });
+  gt({ bank_txn_id: b, gl_entry_id: g, relation: "match", note: `transposed reference ${typo} -> ${good}` });
+}
+
+
+// ── 15. A payment above the unattended posting limit. ────────────────────────
+// Matches perfectly and would auto-post on confidence alone. Policy stops it:
+// above $10,000 a person signs, whatever the model thinks.
+{
+  const v = "Fabrikam Hardware";
+  const inv = "INV-CAPEX01";
+  const amt = -cents(18_450);
+  const b = addBank({ posted_on: day(19), amount_cents: amt, description: `WIRE OUT ${v.toUpperCase()} ${inv}`, counterparty: v, external_ref: inv });
+  const g = addGl({ booked_on: day(19), amount_cents: amt, memo: `${v} ${inv} server refresh`, account_code: "1500", vendor: v, doc_ref: inv });
+  gt({ bank_txn_id: b, gl_entry_id: g, relation: "match", note: "above unattended posting limit" });
+}
+
 // ── write ─────────────────────────────────────────────────────────────────────
 resetDb();
 const d = db();

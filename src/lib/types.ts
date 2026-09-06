@@ -54,6 +54,8 @@ export interface MatchProposal {
   evidence: EvidenceItem[];
   costUsd?: number;
   latencyMs?: number;
+  /** Set once the proposal has been written to the match table. */
+  matchId?: string;
 }
 
 /** Above AUTO_POST -> booked without a human. Below REVIEW_FLOOR -> not even proposed, raised as unmatched. */

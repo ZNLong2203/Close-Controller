@@ -98,6 +98,9 @@ CREATE TABLE IF NOT EXISTS exception (
   id            TEXT PRIMARY KEY,
   run_id        TEXT NOT NULL REFERENCES run(id),
   match_id      TEXT REFERENCES match(id),
+  bank_txn_id   TEXT REFERENCES bank_txn(id),
+  gl_entry_id   TEXT REFERENCES gl_entry(id),
+  evidence_json TEXT,                     -- rendered side-by-side in the review UI
   category      TEXT NOT NULL,            -- unmatched_bank | unmatched_gl | amount_variance | duplicate_suspect |
                                           -- timing_difference | fx_variance | low_confidence | policy_block | three_way_variance
   severity      TEXT NOT NULL,            -- low | medium | high

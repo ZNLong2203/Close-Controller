@@ -6,6 +6,7 @@ import type { Side } from "./normalize";
 import { runRuleMatchers } from "./rules";
 import { runLlmMatcher } from "./llm";
 import { buildExceptions } from "../exceptions";
+import { postMatch } from "../posting";
 
 /**
  * The reconciliation run. Deliberately a fixed, readable sequence rather than a
@@ -61,11 +62,27 @@ export async function runReconciliation(period = "2026-08"): Promise<{ runId: st
   const all = [...ruleResult.proposals, ...llmResult.proposals];
   let autoMatched = 0;
   let pendingReview = 0;
+  let blockedByPolicy = 0;
   for (const p of all) {
     if (p.confidence < CONFIDENCE.REVIEW_FLOOR) continue; // too weak to even propose
     const status = p.confidence >= CONFIDENCE.AUTO_POST ? "auto_posted" : "pending_review";
-    persistMatch(runId, p, status);
-    status === "auto_posted" ? autoMatched++ : pendingReview++;
+    const matchId = persistMatch(runId, p, status);
+    p.matchId = matchId;
+
+    if (status !== "auto_posted") {
+      pendingReview++;
+      continue;
+    }
+    // Confidence earns the right to post; it does not override policy. An
+    // entry the guardrails refuse becomes a reviewer's problem, not a silent
+    // success.
+    const result = postMatch(runId, matchId, "agent");
+    if (result.status === "blocked") {
+      blockedByPolicy++;
+      pendingReview++;
+    } else {
+      autoMatched++;
+    }
   }
 
   // ---- tier 4: typed exceptions for everything left over ----
@@ -86,7 +103,10 @@ export async function runReconciliation(period = "2026-08"): Promise<{ runId: st
 
   d.prepare(`UPDATE run SET finished_at = ?, stats_json = ? WHERE id = ?`)
     .run(nowIso(), JSON.stringify(stats), runId);
-  audit({ runId, actor: "agent:orchestrator", action: "run.finished", detail: { ...stats, exceptionCount }, traceId });
+  audit({
+    runId, actor: "agent:orchestrator", action: "run.finished",
+    detail: { ...stats, exceptionCount, blockedByPolicy }, traceId,
+  });
 
   return { runId, stats };
 }
