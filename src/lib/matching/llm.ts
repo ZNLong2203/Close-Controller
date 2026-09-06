@@ -1,6 +1,7 @@
 import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
 import type { BankTxn, EvidenceItem, GlEntry, MatchProposal } from "../types";
 import { span } from "../trace";
+import { initNeatlogs, traceGemini } from "../neatlogs";
 import type { Side } from "./normalize";
 
 /**
@@ -132,7 +133,10 @@ export async function runLlmMatcher(side: Side, traceId: string): Promise<LlmTie
   }
   if (!side.bank.length || !side.gl.length) return empty;
 
-  const ai = new GoogleGenAI({ apiKey });
+  await initNeatlogs();
+  // Wrapped so every Gemini call lands in Neatlogs with its prompt, response and
+  // token usage. Returns the client unchanged when tracing is not configured.
+  const ai = traceGemini(new GoogleGenAI({ apiKey }));
   const bankById = new Map(side.bank.map((b) => [b.id, b]));
   const glById = new Map(side.gl.map((g) => [g.id, g]));
 

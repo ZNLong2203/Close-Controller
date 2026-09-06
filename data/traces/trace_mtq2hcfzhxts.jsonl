@@ -1,4 +1,0 @@
-{"traceId":"trace_mtq2hcfzhxts","name":"reconciliation.start","startedAt":"2026-09-06T17:09:46.943Z","durationMs":0,"meta":{"runId":"run_mtq2hcfzpz1tk","period":"2026-08"}}
-{"traceId":"trace_mtq2hcfzhxts","name":"rules","startedAt":"2026-09-06T17:09:46.946Z","durationMs":8,"input":{"bank":33,"gl":30,"disabled":false},"output":{"matched":20,"residueBank":12}}
-{"traceId":"trace_mtq2hcfzhxts","name":"gemini.fast.batch1","startedAt":"2026-09-06T17:09:46.955Z","durationMs":2877,"input":{"model":"gemini-3.5-flash-lite","bankLines":12,"glCandidates":10},"output":{"proposals":7},"meta":{"costUsd":0.0031398,"tokens":2788}}
-{"traceId":"trace_mtq2hcfzhxts","name":"llm","startedAt":"2026-09-06T17:09:46.954Z","durationMs":2879,"input":{"bank":12,"gl":10},"output":{"matched":7,"cost":0.00314}}

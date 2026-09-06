@@ -78,7 +78,8 @@ contained and reviewable.
 | `src/lib/posting.ts` | Approved match → balanced journal entry |
 | `src/lib/audit.ts` | Append-only decision log, agent and human alike |
 | `src/lib/export/*` | Read models + RFC 4180 writer behind the three CSV exports |
-| `src/lib/trace.ts` | Neatlogs spans; degrades to no-op when unconfigured |
+| `src/lib/trace.ts` | Local JSONL spans, used for the latency percentiles in the eval |
+| `src/lib/neatlogs.ts` | Neatlogs tracing — wraps the Gemini client so every call is a span; no-op when unconfigured |
 
 ## Data model
 

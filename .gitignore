@@ -8,7 +8,10 @@ node_modules
 *.db-journal
 data/*.csv
 data/*.json
-data/traces/          # per-run span logs, regenerated every close
+# Per-run span logs and the Neatlogs debug dump, regenerated on every close.
+# (git has no inline comments — a trailing one becomes part of the pattern.)
+data/traces/
+spans_raw_optimized.log
 .DS_Store
 
 # Internal working material: battle plan, demo scripts, voice-over, submission

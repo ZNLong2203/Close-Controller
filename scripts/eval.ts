@@ -13,6 +13,7 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { db } from "../src/lib/db";
+import { flushNeatlogs, initNeatlogs } from "../src/lib/neatlogs";
 import { runReconciliation } from "../src/lib/matching/pipeline";
 import { spansFor } from "../src/lib/trace";
 
@@ -254,7 +255,10 @@ ${renderCategories(tiered)}
   }
 }
 
-main().catch((e) => {
+initNeatlogs()
+  .then(main)
+  .finally(flushNeatlogs)
+  .catch((e) => {
   console.error(e);
   process.exit(1);
 });

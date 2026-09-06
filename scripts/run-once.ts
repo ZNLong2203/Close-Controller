@@ -2,6 +2,7 @@
 import { runReconciliation } from "../src/lib/matching/pipeline";
 import { detectPeriod } from "../src/lib/import/period";
 import { db } from "../src/lib/db";
+import { flushNeatlogs, initNeatlogs } from "../src/lib/neatlogs";
 
 async function main() {
 // Same entry point the UI uses. Hard-coding the fixture's month here made the
@@ -30,4 +31,7 @@ console.table(
 );
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+initNeatlogs()
+  .then(main)
+  .finally(flushNeatlogs)
+  .catch((e) => { console.error(e); process.exit(1); });

@@ -98,5 +98,6 @@ per-transaction cost stays low.
 
 ## Credits
 
-Gemini API (`@google/genai`) for the LLM tier · Neatlogs for agent tracing ·
+Gemini API (`@google/genai`) for the LLM tier · Neatlogs for agent tracing —
+every model call is a span with its prompt, response and token usage ·
 built with Agent Orchestrator.
