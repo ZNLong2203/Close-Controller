@@ -7,12 +7,14 @@ export const metadata: Metadata = {
   description: "Autonomous bank reconciliation with human review",
 };
 
+// Ordered as the work actually flows: bring data in, close the month, review
+// what the system could not settle, read the ledger it produced, then the log.
 const NAV = [
+  { href: "/import", label: "Import" },
   { href: "/", label: "Run" },
   { href: "/exceptions", label: "Review queue" },
   { href: "/journal", label: "Journal" },
   { href: "/audit", label: "Audit trail" },
-  { href: "/import", label: "Import CSV" },
 ];
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
