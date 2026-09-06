@@ -1,3 +1,0 @@
-{"traceId":"trace_mtptiyy3s9b5","name":"reconciliation.start","startedAt":"2026-09-06T12:59:06.219Z","durationMs":0,"meta":{"runId":"run_mtptiyy2d5gm2","period":"2026-08"}}
-{"traceId":"trace_mtptiyy3s9b5","name":"rules","startedAt":"2026-09-06T12:59:06.239Z","durationMs":17,"input":{"bank":181,"gl":174},"output":{"matched":141,"residueBank":32}}
-{"traceId":"trace_mtptiyy3s9b5","name":"llm","startedAt":"2026-09-06T12:59:06.257Z","durationMs":0,"input":{"bank":32,"gl":33},"output":{"matched":0,"cost":0}}

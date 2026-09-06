@@ -1,6 +1,0 @@
-{"traceId":"trace_mtpydbh8yyxy","name":"reconciliation.start","startedAt":"2026-09-06T15:14:40.604Z","durationMs":0,"meta":{"runId":"run_mtpydbh84mhm0","period":"2026-08"}}
-{"traceId":"trace_mtpydbh8yyxy","name":"rules","startedAt":"2026-09-06T15:14:40.608Z","durationMs":20,"input":{"bank":182,"gl":175,"disabled":false},"output":{"matched":142,"residueBank":32}}
-{"traceId":"trace_mtpydbh8yyxy","name":"gemini.fast.batch1","startedAt":"2026-09-06T15:14:40.630Z","durationMs":2900,"input":{"model":"gemini-3.5-flash-lite","bankLines":12,"glCandidates":33},"output":{"proposals":7},"meta":{"costUsd":0.0029946,"tokens":3580}}
-{"traceId":"trace_mtpydbh8yyxy","name":"gemini.fast.batch2","startedAt":"2026-09-06T15:14:43.530Z","durationMs":3273,"input":{"model":"gemini-3.5-flash-lite","bankLines":12,"glCandidates":33},"output":{"proposals":8},"meta":{"costUsd":0.0034130000000000002,"tokens":3728}}
-{"traceId":"trace_mtpydbh8yyxy","name":"gemini.fast.batch3","startedAt":"2026-09-06T15:14:46.803Z","durationMs":2814,"input":{"model":"gemini-3.5-flash-lite","bankLines":8,"glCandidates":33},"output":{"proposals":6},"meta":{"costUsd":0.0027695,"tokens":3299}}
-{"traceId":"trace_mtpydbh8yyxy","name":"llm","startedAt":"2026-09-06T15:14:40.628Z","durationMs":8991,"input":{"bank":32,"gl":33},"output":{"matched":20,"cost":0.009177}}
