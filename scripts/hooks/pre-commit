@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Refuse to commit a credential. .env.example is committed, so a key pasted
+# there ships to the remote — which is exactly how this repo leaked one once.
+set -euo pipefail
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+fail=0
+while IFS= read -r f; do
+  [ -f "$f" ] || continue
+  case "$f" in *.lock|package-lock.json|*.bundle) continue;; esac
+
+  # Any KEY= line in a committed env template must be empty.
+  if [ "$(basename "$f")" = ".env.example" ]; then
+    if git show ":$f" | grep -qE '^[A-Z_]*(KEY|TOKEN|SECRET|PASSWORD)[A-Z_]*=.+'; then
+      echo "BLOCKED  $f has a non-empty credential value. Templates must ship empty."
+      fail=1
+    fi
+  fi
+
+  # Known provider key shapes, anywhere.
+  if git show ":$f" | grep -qE 'AIza[0-9A-Za-z_-]{30,}|AQ\.[A-Za-z0-9_-]{20,}|sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{40,}|ghp_[A-Za-z0-9]{30,}'; then
+    echo "BLOCKED  $f looks like it contains an API key."
+    fail=1
+  fi
+done <<< "$staged"
+
+if [ "$fail" -ne 0 ]; then
+  echo
+  echo "Nothing was committed. Remove the secret, or bypass with --no-verify if you are certain."
+  exit 1
+fi
